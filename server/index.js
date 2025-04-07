@@ -252,13 +252,80 @@ app.delete('/api/users/:userID', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// API route to get servers
-app.get('/api/servers', verifyToken, async (req, res) => {
+// API route to get servers - Updated to be public for demo purposes
+app.get('/api/servers', async (req, res) => {
   try {
     const [servers] = await pool.execute('SELECT * FROM servers');
     res.status(200).json(servers);
   } catch (error) {
     console.error('Error fetching servers:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// API route to add a new server
+app.post('/api/servers', async (req, res) => {
+  try {
+    const { serverID, name, ip, status, type, description } = req.body;
+    
+    if (!serverID || !name || !ip) {
+      return res.status(400).json({ message: 'Server ID, name and IP address are required' });
+    }
+    
+    // Check if server already exists
+    const [existingServer] = await pool.execute('SELECT serverID FROM servers WHERE serverID = ?', [serverID]);
+    if (existingServer.length > 0) {
+      return res.status(409).json({ message: 'Server already exists with this ID' });
+    }
+    
+    // Insert into servers table
+    const [result] = await pool.execute(
+      'INSERT INTO servers (serverID, name, ip, status, type, description, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+      [serverID, name, ip, status || 'online', type || null, description || null]
+    );
+    
+    res.status(201).json({ 
+      message: 'Server created successfully',
+      serverID,
+      name,
+      ip,
+      status: status || 'online',
+      type,
+      description
+    });
+  } catch (error) {
+    console.error('Error creating server:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// API route to update server status
+app.put('/api/servers/:serverID', async (req, res) => {
+  try {
+    const { serverID } = req.params;
+    const { status } = req.body;
+    
+    if (!serverID || !status) {
+      return res.status(400).json({ message: 'Server ID and status are required' });
+    }
+    
+    // Update server status
+    const [result] = await pool.execute(
+      'UPDATE servers SET status = ? WHERE serverID = ?',
+      [status, serverID]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Server not found' });
+    }
+    
+    res.status(200).json({ 
+      message: 'Server status updated successfully',
+      serverID,
+      status 
+    });
+  } catch (error) {
+    console.error('Error updating server status:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -388,25 +455,106 @@ app.post('/api/requests', async (req, res) => {
 });
 
 // API route to get issues
-app.get('/api/issues', verifyToken, async (req, res) => {
+app.get('/api/issues', async (req, res) => {
   try {
-    let query = 'SELECT i.*, u.username, s.name as server_name FROM issues i ' +
-                'JOIN users u ON i.user_id = u.id ' +
-                'LEFT JOIN servers s ON i.server_id = s.id';
-    const params = [];
-    
-    // If user role is not admin, only show their issues
-    if (req.user.role !== 'admin') {
-      query += ' WHERE i.user_id = ?';
-      params.push(req.user.id);
+    // For demo purposes, create a default issues table if it doesn't exist
+    try {
+      await pool.execute(`
+        CREATE TABLE IF NOT EXISTS issues (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id VARCHAR(50) NOT NULL,
+          server_id VARCHAR(50),
+          title VARCHAR(100) NOT NULL,
+          description TEXT,
+          priority ENUM('High', 'Medium', 'Low') DEFAULT 'Medium',
+          status ENUM('pending', 'resolved') DEFAULT 'pending',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(userID) ON DELETE CASCADE,
+          FOREIGN KEY (server_id) REFERENCES servers(serverID) ON DELETE SET NULL
+        )
+      `);
+      
+      // Check if we need to create some test issues
+      const [issueRows] = await pool.execute('SELECT COUNT(*) as count FROM issues');
+      if (issueRows[0].count < 1) {
+        // Get some user IDs
+        const [userRows] = await pool.execute('SELECT userID FROM users LIMIT 3');
+        
+        if (userRows.length > 0) {
+          const testIssues = [
+            { 
+              user_id: userRows[0].userID, 
+              title: "Wi-Fi not working", 
+              description: "Cannot connect to Campus Wi-Fi", 
+              priority: "High"
+            },
+            { 
+              user_id: userRows.length > 1 ? userRows[1].userID : userRows[0].userID, 
+              title: "VPN Issue", 
+              description: "Unable to connect to VPN from home", 
+              priority: "Medium"
+            },
+            { 
+              user_id: userRows.length > 2 ? userRows[2].userID : userRows[0].userID, 
+              title: "Email Problems", 
+              description: "Cannot send or receive emails since this morning", 
+              priority: "High"
+            }
+          ];
+          
+          for (const issue of testIssues) {
+            await pool.execute(
+              'INSERT INTO issues (user_id, title, description, priority) VALUES (?, ?, ?, ?)',
+              [issue.user_id, issue.title, issue.description, issue.priority]
+            );
+          }
+        }
+      }
+    } catch (tableErr) {
+      console.error('Error setting up issues table:', tableErr);
     }
     
-    query += ' ORDER BY i.priority DESC, i.created_at DESC';
+    const [issues] = await pool.execute(`
+      SELECT i.*, u.name as username 
+      FROM issues i 
+      JOIN users u ON i.user_id = u.userID 
+      ORDER BY i.priority DESC, i.created_at DESC
+    `);
     
-    const [issues] = await pool.execute(query, params);
     res.status(200).json(issues);
   } catch (error) {
     console.error('Error fetching issues:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// API route to update issue status
+app.put('/api/issues/:issueID', async (req, res) => {
+  try {
+    const { issueID } = req.params;
+    const { status } = req.body;
+    
+    if (!issueID || !status) {
+      return res.status(400).json({ message: 'Issue ID and status are required' });
+    }
+    
+    // Update issue status
+    const [result] = await pool.execute(
+      'UPDATE issues SET status = ? WHERE id = ?',
+      [status, issueID]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Issue not found' });
+    }
+    
+    res.status(200).json({ 
+      message: 'Issue status updated successfully',
+      issueID,
+      status 
+    });
+  } catch (error) {
+    console.error('Error updating issue status:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

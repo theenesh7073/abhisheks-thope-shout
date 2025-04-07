@@ -98,6 +98,22 @@ async function createTables() {
       )
     `);
     
+    // Create issues table if not exists
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS issues (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id VARCHAR(50) NOT NULL,
+        server_id VARCHAR(50),
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        priority ENUM('High', 'Medium', 'Low') DEFAULT 'Medium',
+        status ENUM('pending', 'resolved') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(userID) ON DELETE CASCADE,
+        FOREIGN KEY (server_id) REFERENCES servers(serverID) ON DELETE SET NULL
+      )
+    `);
+    
     console.log('Tables created/verified successfully');
     
     // Check if we need to create some test servers
@@ -110,6 +126,12 @@ async function createTables() {
     const [requestRows] = await pool.execute('SELECT COUNT(*) as count FROM requests');
     if (requestRows[0].count < 1) {
       await createTestRequests();
+    }
+    
+    // Check if we need to create some test issues
+    const [issueRows] = await pool.execute('SELECT COUNT(*) as count FROM issues');
+    if (issueRows[0].count < 1) {
+      await createTestIssues();
     }
     
     return true;
@@ -139,6 +161,56 @@ async function createTestServers() {
     return true;
   } catch (error) {
     console.error('Error creating test servers:', error);
+    return false;
+  }
+}
+
+// Create test issues
+async function createTestIssues() {
+  try {
+    console.log('Creating test issues...');
+    
+    // Get user IDs
+    const [userRows] = await pool.execute('SELECT userID FROM users LIMIT 3');
+    if (userRows.length === 0) {
+      console.log('No users found to create test issues');
+      await createTestUsers();
+      return false;
+    }
+    
+    // Sample issues data
+    const issues = [
+      { 
+        user_id: userRows[0].userID, 
+        title: "Wi-Fi not working", 
+        description: "Cannot connect to Campus Wi-Fi", 
+        priority: "High"
+      },
+      { 
+        user_id: userRows.length > 1 ? userRows[1].userID : userRows[0].userID, 
+        title: "VPN Issue", 
+        description: "Unable to connect to VPN from home", 
+        priority: "Medium"
+      },
+      { 
+        user_id: userRows.length > 2 ? userRows[2].userID : userRows[0].userID, 
+        title: "Email Problems", 
+        description: "Cannot send or receive emails since this morning", 
+        priority: "High"
+      }
+    ];
+    
+    for (const issue of issues) {
+      await pool.execute(
+        'INSERT INTO issues (user_id, title, description, priority) VALUES (?, ?, ?, ?)',
+        [issue.user_id, issue.title, issue.description, issue.priority]
+      );
+    }
+    
+    console.log('Test issues created successfully');
+    return true;
+  } catch (error) {
+    console.error('Error creating test issues:', error);
     return false;
   }
 }
@@ -563,6 +635,59 @@ async function getServers() {
   }
 }
 
+// Update server status
+async function updateServerStatus(serverID, status) {
+  try {
+    const query = 'UPDATE servers SET status = ? WHERE serverID = ?';
+    const [result] = await pool.execute(query, [status, serverID]);
+    
+    return result.affectedRows > 0;
+  } catch (error) {
+    console.error('Error updating server status:', error);
+    return false;
+  }
+}
+
+// Get all issues with pagination
+async function getIssues(limit = 20, offset = 0, status = null) {
+  try {
+    let query = `
+      SELECT i.*, u.name as userName 
+      FROM issues i 
+      JOIN users u ON i.user_id = u.userID
+    `;
+    
+    const params = [];
+    
+    if (status) {
+      query += ' WHERE i.status = ?';
+      params.push(status);
+    }
+    
+    query += ' ORDER BY i.priority DESC, i.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const [rows] = await pool.execute(query, params);
+    return rows;
+  } catch (error) {
+    console.error('Error getting issues:', error);
+    return [];
+  }
+}
+
+// Update issue status
+async function updateIssueStatus(issueID, status) {
+  try {
+    const query = 'UPDATE issues SET status = ? WHERE id = ?';
+    const [result] = await pool.execute(query, [status, issueID]);
+    
+    return result.affectedRows > 0;
+  } catch (error) {
+    console.error('Error updating issue status:', error);
+    return false;
+  }
+}
+
 // Get requests with pagination and filtering
 async function getRequests(userID = null, limit = 20, offset = 0, status = null) {
   try {
@@ -693,9 +818,14 @@ module.exports = {
   getUserWithRoleInfo,
   getUsers,
   getServers,
+  updateServerStatus,
+  getIssues,
+  updateIssueStatus,
   getRequests,
   updateRequestStatus,
   getWifiSessions,
   createTestUsers,
-  createTestRequests
+  createTestRequests,
+  createTestServers,
+  createTestIssues
 };
