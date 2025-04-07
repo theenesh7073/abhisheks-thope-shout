@@ -1,3 +1,4 @@
+
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
@@ -614,15 +615,15 @@ async function getRequests(userID = null, limit = 20, offset = 0, status = null)
     
     query += ' ORDER BY r.timestamp DESC';
     
+    // Fix: Instead of using parameterized LIMIT/OFFSET, add them directly to the query string
     if (limit) {
-      query += ' LIMIT ? OFFSET ?';
-      params.push(limit, offset);
+      query += ` LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
     }
     
     console.log('Executing requests query:', query);
     console.log('With params:', params);
     
-    // Execute the actual query
+    // Execute the actual query without LIMIT/OFFSET parameters
     const [rows] = await pool.execute(query, params);
     console.log(`Query returned ${rows.length} requests`);
     
