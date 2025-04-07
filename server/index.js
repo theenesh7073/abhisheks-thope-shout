@@ -268,25 +268,32 @@ app.post('/api/servers', async (req, res) => {
   try {
     const { serverID, name, ip, status, type, description } = req.body;
     
-    if (!serverID || !name || !ip) {
-      return res.status(400).json({ message: 'Server ID, name and IP address are required' });
+    console.log('Received server data:', req.body);
+    
+    if (!name || !ip) {
+      return res.status(400).json({ message: 'Server name and IP address are required' });
     }
     
-    // Check if server already exists
-    const [existingServer] = await pool.execute('SELECT serverID FROM servers WHERE serverID = ?', [serverID]);
+    // Generate serverID if not provided
+    const serverId = serverID || `srv${Date.now().toString().slice(-5)}`;
+    
+    // Check if server already exists with this IP
+    const [existingServer] = await pool.execute('SELECT serverID FROM servers WHERE ip = ?', [ip]);
     if (existingServer.length > 0) {
-      return res.status(409).json({ message: 'Server already exists with this ID' });
+      return res.status(409).json({ message: 'Server already exists with this IP address' });
     }
     
     // Insert into servers table
     const [result] = await pool.execute(
       'INSERT INTO servers (serverID, name, ip, status, type, description, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
-      [serverID, name, ip, status || 'online', type || null, description || null]
+      [serverId, name, ip, status || 'online', type || null, description || null]
     );
+    
+    console.log('Server created successfully:', serverId);
     
     res.status(201).json({ 
       message: 'Server created successfully',
-      serverID,
+      serverID: serverId,
       name,
       ip,
       status: status || 'online',
@@ -295,7 +302,7 @@ app.post('/api/servers', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating server:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

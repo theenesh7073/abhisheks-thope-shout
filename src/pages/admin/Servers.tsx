@@ -191,13 +191,14 @@ const Servers = () => {
   const onAddServer = async (values: z.infer<typeof serverFormSchema>) => {
     try {
       const serverData = {
-        serverID: `srv${Date.now().toString().slice(-5)}`, // Generate a simple ID
         name: values.name,
         ip: values.ipAddress,
         type: values.type,
-        description: values.description,
+        description: values.description || '',
         status: 'online'
       };
+
+      console.log("Submitting server data:", serverData);
 
       const response = await fetch(`${apiUrl}/servers`, {
         method: 'POST',
@@ -208,16 +209,19 @@ const Servers = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add server");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add server");
       }
 
       const newServer = await response.json();
+      
+      console.log("Server added successfully:", newServer);
       
       // Add to local state (with appropriate property mapping)
       setServers(prevServers => [
         ...prevServers, 
         {
-          id: newServer.serverID || serverData.serverID,
+          id: newServer.serverID,
           name: values.name,
           ipAddress: values.ipAddress,
           uptime: "Just added", 
@@ -230,22 +234,7 @@ const Servers = () => {
       form.reset();
     } catch (error) {
       console.error("Error adding server:", error);
-      toast.error("Failed to add server");
-      
-      // Add to local state anyway for demo purposes
-      const mockServerId = `srv${Date.now().toString().slice(-5)}`;
-      setServers(prevServers => [
-        ...prevServers, 
-        {
-          id: mockServerId,
-          name: values.name,
-          ipAddress: values.ipAddress,
-          uptime: "Just added", 
-          status: "online" as StatusType
-        }
-      ]);
-      setIsAddServerOpen(false);
-      form.reset();
+      toast.error(`Failed to add server: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
