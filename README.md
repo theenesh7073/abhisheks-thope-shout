@@ -1,73 +1,91 @@
-# Welcome to your Lovable project
 
-## Project info
+# Command Center Portal
 
-**URL**: https://lovable.dev/projects/01e12925-9ce9-4183-a8f5-1a168a284f03
+A web application for server management, monitoring, and resource allocation with user and admin roles.
 
-## How can I edit this code?
+## Project Structure
 
-There are several ways of editing your application.
+- Frontend: React application with TypeScript, Tailwind CSS, and Shadcn UI components
+- Backend: Node.js/Express server with MySQL database
 
-**Use Lovable**
+## Setup Instructions
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/01e12925-9ce9-4183-a8f5-1a168a284f03) and start prompting.
+### Frontend Setup
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Install dependencies:
+```
+npm install
+```
 
-**Use your preferred IDE**
+2. Create a `.env` file with the following content:
+```
+VITE_API_URL=http://localhost:5000/api
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Start the development server:
+```
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Backend Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Navigate to the server directory:
+```
+cd server
+```
 
-**Use GitHub Codespaces**
+2. Install dependencies:
+```
+npm install
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+3. Create a `.env` file based on the `.env.example` and configure your MySQL connection:
+```
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_NAME=command_center
+JWT_SECRET=your_secret_key_here
+PORT=5000
+```
 
-## What technologies are used for this project?
+4. Create a MySQL database by running the initialization script:
+```
+mysql -u root -p < database/init.sql
+```
 
-This project is built with:
+Or you can execute the SQL commands in the `server/database/init.sql` file using a MySQL client.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+5. Start the server:
+```
+npm run dev
+```
 
-## How can I deploy this project?
+## Default Users
 
-Simply open [Lovable](https://lovable.dev/projects/01e12925-9ce9-4183-a8f5-1a168a284f03) and click on Share -> Publish.
+The system comes with two default users:
 
-## Can I connect a custom domain to my Lovable project?
+1. Admin User:
+   - Username: admin
+   - Password: admin123
+   - Role: admin
 
-Yes it is!
+2. Regular User:
+   - Username: user
+   - Password: user123
+   - Role: user
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Features
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- Role-based authentication (admin/user)
+- Dashboard for both admin and user roles
+- Server management and monitoring
+- Resource allocation tracking
+- User management (admin only)
+- Request and issue tracking
+
+## Technologies Used
+
+- Frontend: React, TypeScript, Tailwind CSS, Shadcn UI
+- Backend: Node.js, Express, MySQL
+- Authentication: JWT (JSON Web Tokens)

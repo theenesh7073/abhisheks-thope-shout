@@ -1,74 +1,106 @@
 
-import React, { useEffect, useState } from "react";
-import Title from "@/components/Title";
-import StarBurst from "@/components/StarBurst";
-import { toast } from "sonner";
-
-const celebratoryMessages = [
-  "Absolutely Thope!",
-  "Totally Awesome!",
-  "Simply Amazing!",
-  "Incredibly Thope!",
-  "Beyond Awesome!"
-];
+import { useState } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { Header } from "@/components/Header";
+import { PageTransition } from "@/components/PageTransition";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Index = () => {
-  const [clicked, setClicked] = useState(0);
+  const { isAuthenticated, userRole, login } = useAuth();
   
-  useEffect(() => {
-    // Show a welcome toast when the page loads
-    setTimeout(() => {
-      toast("Welcome to Abhishek's celebration page!", {
-        description: "Click anywhere to celebrate more!",
-        duration: 5000,
-      });
-    }, 1000);
-  }, []);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = () => {
-    // Increment click counter
-    setClicked(prev => prev + 1);
+  // If already authenticated, redirect to appropriate dashboard
+  if (isAuthenticated) {
+    return <Navigate to={userRole === "admin" ? "/admin/dashboard" : "/user/dashboard"} />;
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
     
-    // Show a celebratory toast
-    const randomMessage = celebratoryMessages[Math.floor(Math.random() * celebratoryMessages.length)];
-    toast(randomMessage, {
-      description: `Abhishek is Thope x${clicked + 1}`,
-    });
+    // Simulate network request
+    setTimeout(() => {
+      login(username, password, rememberMe);
+      setIsLoading(false);
+    }, 800);
   };
 
   return (
-    <div 
-      className="min-h-screen thope-bg-gradient flex flex-col items-center justify-center relative overflow-hidden p-4"
-      onClick={handleClick}
-    >
-      {/* Decorative elements */}
-      <StarBurst className="top-10 left-10" size="md" color="#8B5CF6" />
-      <StarBurst className="bottom-20 right-10" size="lg" color="#F97316" />
-      <StarBurst className="top-1/2 right-1/4" size="sm" color="#D946EF" />
-      <StarBurst className="bottom-10 left-1/4" size="md" color="#D6BCFA" />
+    <div className="min-h-screen bg-background">
+      <Header />
       
-      <div className="thope-card rounded-2xl p-8 md:p-12 shadow-lg max-w-3xl w-full relative z-10">
-        <div className="text-center">
-          <Title text="Abhishek is" className="mb-2" />
-          <Title text="Thope" highlight="Thope" className="mb-8 text-5xl md:text-7xl lg:text-9xl" />
-          
-          <p className="mt-6 text-lg md:text-xl opacity-75 animate-gradient-flow">
-            Click anywhere to celebrate more!
-          </p>
-          
-          {clicked > 0 && (
-            <div className="mt-8">
-              <div className="text-thope-dark font-medium text-lg">
-                Celebration count: <span className="text-thope-accent font-bold">{clicked}</span>
-              </div>
+      <PageTransition>
+        <div className="flex flex-col items-center justify-center min-h-screen px-4">
+          <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-sm border border-border animate-scale-in">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-semibold tracking-tight">Login Panel</h2>
+              <p className="text-sm text-muted-foreground">
+                Sign in to access your account
+              </p>
             </div>
-          )}
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="Enter Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full"
+                  required
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remember-me" 
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                />
+                <Label htmlFor="remember-me" className="text-sm cursor-pointer">
+                  Remember me
+                </Label>
+              </div>
+              
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing in..." : "Login"}
+              </Button>
+              
+              <div className="text-center text-sm text-muted-foreground">
+                <p>
+                  Try "admin" or "user" as username with any password
+                </p>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-      
-      <footer className="absolute bottom-4 text-sm text-gray-500">
-        &copy; {new Date().getFullYear()} Abhishek is Thope
-      </footer>
+      </PageTransition>
     </div>
   );
 };
