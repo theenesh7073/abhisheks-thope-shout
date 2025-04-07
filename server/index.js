@@ -277,15 +277,15 @@ app.post('/api/servers', async (req, res) => {
     // Generate serverID if not provided
     const serverId = serverID || `srv${Date.now().toString().slice(-5)}`;
     
-    // Check if server already exists with this IP
-    const [existingServer] = await pool.execute('SELECT serverID FROM servers WHERE ip = ?', [ip]);
+    // Check if server already exists with this IP - Using IPAddress column instead of ip
+    const [existingServer] = await pool.execute('SELECT serverID FROM servers WHERE IPAddress = ?', [ip]);
     if (existingServer.length > 0) {
       return res.status(409).json({ message: 'Server already exists with this IP address' });
     }
     
-    // Insert into servers table
+    // Insert into servers table - Using IPAddress column instead of ip
     const [result] = await pool.execute(
-      'INSERT INTO servers (serverID, name, ip, status, type, description, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+      'INSERT INTO servers (serverID, name, IPAddress, status, type, description) VALUES (?, ?, ?, ?, ?, ?)',
       [serverId, name, ip, status || 'online', type || null, description || null]
     );
     
@@ -295,7 +295,7 @@ app.post('/api/servers', async (req, res) => {
       message: 'Server created successfully',
       serverID: serverId,
       name,
-      ip,
+      ipAddress: ip,
       status: status || 'online',
       type,
       description
