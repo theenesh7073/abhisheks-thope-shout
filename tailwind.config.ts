@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -52,6 +53,12 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				thope: {
+					DEFAULT: '#8B5CF6', // Vibrant purple
+					light: '#D6BCFA', // Light purple
+					dark: '#6E59A5', // Dark purple
+					accent: '#F97316', // Bright orange contrast
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -84,11 +91,33 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'bounce-subtle': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
+				},
+				'gradient-flow': {
+					'0%': { backgroundPosition: '0% 50%' },
+					'50%': { backgroundPosition: '100% 50%' },
+					'100%': { backgroundPosition: '0% 50%' }
+				},
+				'text-spotlight': {
+					'0%, 100%': { 
+						'background-size': '200% 200%', 
+						'background-position': 'left center'
+					},
+					'50%': { 
+						'background-size': '200% 200%', 
+						'background-position': 'right center'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite',
+				'gradient-flow': 'gradient-flow 3s ease infinite',
+				'text-spotlight': 'text-spotlight 4s ease infinite'
 			}
 		}
 	},
