@@ -266,7 +266,7 @@ app.get('/api/servers', async (req, res) => {
 // API route to add a new server
 app.post('/api/servers', async (req, res) => {
   try {
-    const { serverID, name, ip, status, type, description } = req.body;
+    const { serverID, name, ip, status, description } = req.body;
     
     console.log('Received server data:', req.body);
     
@@ -284,9 +284,10 @@ app.post('/api/servers', async (req, res) => {
     }
     
     // Insert into servers table - Using IPAddress column instead of ip
+    // Only include fields that exist in the database schema
     const [result] = await pool.execute(
-      'INSERT INTO servers (serverID, name, IPAddress, status, type, description) VALUES (?, ?, ?, ?, ?, ?)',
-      [serverId, name, ip, status || 'online', type || null, description || null]
+      'INSERT INTO servers (serverID, name, IPAddress, status) VALUES (?, ?, ?, ?)',
+      [serverId, name, ip, status || 'offline']
     );
     
     console.log('Server created successfully:', serverId);
@@ -296,9 +297,7 @@ app.post('/api/servers', async (req, res) => {
       serverID: serverId,
       name,
       ipAddress: ip,
-      status: status || 'online',
-      type,
-      description
+      status: status || 'offline'
     });
   } catch (error) {
     console.error('Error creating server:', error);
