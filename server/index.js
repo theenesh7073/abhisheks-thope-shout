@@ -473,7 +473,7 @@ app.get('/api/issues', async (req, res) => {
           title VARCHAR(100) NOT NULL,
           description TEXT,
           priority ENUM('High', 'Medium', 'Low') DEFAULT 'Medium',
-          status ENUM('pending', 'resolved') DEFAULT 'pending',
+          status ENUM('pending', 'resolved', 'open', 'solved') DEFAULT 'open',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (user_id) REFERENCES users(userID) ON DELETE CASCADE,
           FOREIGN KEY (server_id) REFERENCES servers(serverID) ON DELETE SET NULL
@@ -520,6 +520,7 @@ app.get('/api/issues', async (req, res) => {
       console.error('Error setting up issues table:', tableErr);
     }
     
+    // Get all issues with user names
     const [issues] = await pool.execute(`
       SELECT i.*, u.name as username 
       FROM issues i 
@@ -530,6 +531,36 @@ app.get('/api/issues', async (req, res) => {
     res.status(200).json(issues);
   } catch (error) {
     console.error('Error fetching issues:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// API route to add a new issue
+app.post('/api/issues', async (req, res) => {
+  try {
+    const { title, description, priority, user_id } = req.body;
+    
+    if (!title || !description || !priority) {
+      return res.status(400).json({ message: 'Title, description, and priority are required' });
+    }
+    
+    // Use provided userID or default to a test user
+    const issueUserID = user_id || 'student001';
+    
+    console.log(`Creating new issue for user ${issueUserID}:`, { title, description, priority });
+    
+    // Insert into issues table
+    const [result] = await pool.execute(
+      'INSERT INTO issues (user_id, title, description, priority) VALUES (?, ?, ?, ?)',
+      [issueUserID, title, description, priority]
+    );
+    
+    res.status(201).json({ 
+      message: 'Issue created successfully',
+      issue: { id: result.insertId, title, description, priority, status: 'open', user_id: issueUserID }
+    });
+  } catch (error) {
+    console.error('Error creating issue:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
