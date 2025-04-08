@@ -146,7 +146,16 @@ const Servers = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setServers(data);
+      
+      // Transform the data to match our Server interface
+      const formattedServers: Server[] = data.map((server: any) => ({
+        serverID: server.serverID,
+        name: server.name,
+        ipAddress: server.IPAddress, // Map IPAddress from API to ipAddress in our interface
+        status: server.status
+      }));
+      
+      setServers(formattedServers);
     } catch (error: any) {
       toast.error("Error fetching servers", {
         description: error.message
