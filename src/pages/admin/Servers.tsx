@@ -148,11 +148,9 @@ const Servers = () => {
       const data = await response.json();
       setServers(data);
     } catch (error: any) {
-      toast({
-        title: "Error!",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error("Error fetching servers", {
+        description: error.message
+      });
       console.error("Could not fetch servers:", error);
     } finally {
       setIsLoading(false);
@@ -173,18 +171,12 @@ const Servers = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      toast({
-        title: "Success!",
-        description: "Server added successfully.",
-      })
-
+      toast.success("Server added successfully");
       fetchServers(); // Refresh the server list
     } catch (error: any) {
-      toast({
-        title: "Error!",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error("Error adding server", {
+        description: error.message
+      });
       console.error("Could not add server:", error);
     } finally {
       setIsAddServerModalOpen(false);
