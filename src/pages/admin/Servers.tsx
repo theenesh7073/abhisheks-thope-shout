@@ -1,5 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
+import { Header } from "@/components/Header";
+import { Sidebar } from "@/components/Sidebar";
+import { PageTransition } from "@/components/PageTransition";
 import {
   Table,
   TableBody,
@@ -14,7 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { Spinner } from "@/components/ui/spinner"
 
 interface Server {
@@ -189,50 +192,59 @@ const Servers = () => {
   };
 
   return (
-    <div>
-      <div className="container py-10">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Servers</h1>
-          <Button onClick={() => setIsAddServerModalOpen(true)}>
-            Add Server
-          </Button>
-        </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <Sidebar role="admin" />
+      
+      <PageTransition>
+        <main className="pt-24 pl-72 pr-8 pb-16 animate-fade-in">
+          <div className="max-w-6xl">
+            <section className="bg-white p-8 rounded-lg shadow-sm border border-border">
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold">Servers</h1>
+                <Button onClick={() => setIsAddServerModalOpen(true)}>
+                  Add Server
+                </Button>
+              </div>
 
-        <AddServerModal
-          isOpen={isAddServerModalOpen}
-          onClose={() => setIsAddServerModalOpen(false)}
-          onAddServer={handleAddServer}
-        />
+              <AddServerModal
+                isOpen={isAddServerModalOpen}
+                onClose={() => setIsAddServerModalOpen(false)}
+                onAddServer={handleAddServer}
+              />
 
-        <div className="mt-4 relative overflow-x-auto">
-          {isLoading ? (
-            <div className="absolute inset-0 bg-gray-100 dark:bg-gray-700 opacity-50 flex items-center justify-center">
-              <Spinner />
-            </div>
-          ) : null}
-          <Table>
-            <TableCaption>A list of your recent servers.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {servers.map((server) => (
-                <TableRow key={server.serverID}>
-                  <TableCell className="font-medium">{server.serverID}</TableCell>
-                  <TableCell>{server.name}</TableCell>
-                  <TableCell>{server.ipAddress}</TableCell>
-                  <TableCell>{server.status}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+              <div className="relative overflow-x-auto">
+                {isLoading ? (
+                  <div className="absolute inset-0 bg-gray-100 dark:bg-gray-700 opacity-50 flex items-center justify-center">
+                    <Spinner />
+                  </div>
+                ) : null}
+                <Table>
+                  <TableCaption>A list of your recent servers.</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[100px]">ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>IP Address</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {servers.map((server) => (
+                      <TableRow key={server.serverID}>
+                        <TableCell className="font-medium">{server.serverID}</TableCell>
+                        <TableCell>{server.name}</TableCell>
+                        <TableCell>{server.ipAddress}</TableCell>
+                        <TableCell>{server.status}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
+          </div>
+        </main>
+      </PageTransition>
     </div>
   );
 };

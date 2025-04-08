@@ -35,9 +35,9 @@ const Servers = () => {
       
       // Transform server data to match our interface
       const formattedServers = data.map((server: any) => ({
-        id: server.serverID,
+        serverID: server.serverID,
         name: server.name,
-        ipAddress: server.ipAddress,
+        ipAddress: server.IPAddress,
         status: server.status as StatusType
       }));
       
@@ -49,19 +49,19 @@ const Servers = () => {
       // Fallback to mock data if API fails
       setAccessibleServers([
         { 
-          id: 1, 
+          serverID: "server001", 
           name: "Database Server", 
           ipAddress: "192.168.1.10", 
           status: "online" as StatusType
         },
         { 
-          id: 2, 
+          serverID: "server002", 
           name: "Application Server", 
           ipAddress: "192.168.1.20", 
           status: "maintenance" as StatusType
         },
         { 
-          id: 3, 
+          serverID: "server003", 
           name: "Storage Server", 
           ipAddress: "192.168.1.30", 
           status: "online" as StatusType
@@ -106,7 +106,7 @@ const Servers = () => {
                     <tbody>
                       {accessibleServers.length > 0 ? (
                         accessibleServers.map((server) => (
-                          <tr key={server.id} className="hover:bg-muted/30 transition-colors">
+                          <tr key={server.serverID} className="hover:bg-muted/30 transition-colors">
                             <td className="p-4 border-t">{server.name}</td>
                             <td className="p-4 border-t">{server.ipAddress}</td>
                             <td className="p-4 border-t">

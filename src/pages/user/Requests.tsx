@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { StatusBadge, StatusType } from "@/components/StatusBadge";
 import { toast } from "sonner";
-import { Spinner } from "@/components/Spinner";
+import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
@@ -30,7 +30,7 @@ interface Request {
 }
 
 const Requests = () => {
-  const [requestTitle, setRequestTitle] = useState("");
+  const [requestType, setRequestType] = useState("");
   const [requestDescription, setRequestDescription] = useState("");
   const [requestPriority, setRequestPriority] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,7 +91,7 @@ const Requests = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!requestTitle || !requestDescription || !requestPriority) {
+    if (!requestType || !requestDescription || !requestPriority) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -105,15 +105,11 @@ const Requests = () => {
         throw new Error("No authentication token found");
       }
       
-      // Generate a unique request ID (in a real app this would be done by the server)
-      const requestID = `req${Date.now()}`;
-      
-      // Prepare the request data
+      // Prepare the request data with correct field names
       const requestData = {
-        requestID,
-        type: requestPriority, // Use the priority as the type
+        type: requestType,
         description: requestDescription,
-        // The server will add the userID, timestamp, and status automatically
+        priority: requestPriority
       };
       
       console.log("Submitting request:", requestData);
@@ -139,7 +135,7 @@ const Requests = () => {
       toast.success("Request submitted successfully");
       
       // Reset form
-      setRequestTitle("");
+      setRequestType("");
       setRequestDescription("");
       setRequestPriority("");
       
@@ -189,8 +185,8 @@ const Requests = () => {
                     <Input
                       id="request-title"
                       placeholder="Enter Request Title"
-                      value={requestTitle}
-                      onChange={(e) => setRequestTitle(e.target.value)}
+                      value={requestType}
+                      onChange={(e) => setRequestType(e.target.value)}
                       required
                     />
                   </div>
